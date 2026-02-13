@@ -151,7 +151,7 @@ body { font-family: 'DM Sans', -apple-system, sans-serif; background: ${embedded
           <div className="header-logo">🌿</div>
           <div>
             <h1>Eco · ECODIG<span>26A</span></h1>
-            <small>Ecosistemas Digitales · Virtual Educa 2025</small>
+            <small>Ecosistemas Digitales · Aprende Virtual 2026</small>
           </div>
           <div className="header-right">
             <div className="badge"><div className="badge-dot" /> En línea</div>
