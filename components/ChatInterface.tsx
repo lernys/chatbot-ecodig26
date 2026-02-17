@@ -14,14 +14,14 @@ const MODES = [
 
 const QUICK_QUESTIONS: Record<Mode, string[]> = {
   chat: [
-    '¿Qué temas cubre el Módulo 1?',
+    '¿Qué temas cubre la Unidad 1?',
     '¿Cómo se evalúa el curso?',
     '¿Qué son las "pequeñas piezas ligeramente articuladas"?',
     '¿Qué es un EPA/PLE?',
   ],
   estudio: [
     'Quiero practicar sobre conectivismo',
-    'Hazme preguntas del Módulo 2',
+    'Hazme preguntas de la Unidad 2',
     'Pregúntame sobre teorías de aprendizaje',
     'Quiero repasar comunidades de práctica',
   ],
@@ -59,6 +59,13 @@ export default function ChatInterface({ embedded = false }: { embedded?: boolean
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Persistir historial y estado por modo
+  const savedChats = useRef<Record<Mode, { messages: typeof messages; started: boolean }>>({
+    chat: { messages: [], started: false },
+    estudio: { messages: [], started: false },
+    reflexion: { messages: [], started: false },
+  });
+
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isLoading]);
   useEffect(() => {
     if (textareaRef.current) {
@@ -67,7 +74,22 @@ export default function ChatInterface({ embedded = false }: { embedded?: boolean
     }
   }, [input]);
 
-  const switchMode = useCallback((m: Mode) => { setMode(m); setMessages([]); setStarted(false); }, [setMessages]);
+  // Mantener sincronizado el ref con los mensajes actuales
+  useEffect(() => {
+    savedChats.current[mode] = { messages, started };
+  }, [messages, started, mode]);
+
+  const switchMode = useCallback((m: Mode) => {
+    // Guardar estado actual antes de cambiar
+    savedChats.current[mode] = { messages, started };
+    // Cambiar modo
+    setMode(m);
+    // Restaurar estado del modo destino
+    const saved = savedChats.current[m];
+    setMessages(saved.messages);
+    setStarted(saved.started);
+  }, [mode, messages, started, setMessages]);
+
   const handleFormSubmit = (e: React.FormEvent) => { e.preventDefault(); if (!input.trim()) return; if (!started) setStarted(true); handleSubmit(e); };
   const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleFormSubmit(e); } };
   const handleQuick = (q: string) => { if (!started) setStarted(true); append({ role: 'user', content: q }); };
@@ -155,7 +177,7 @@ body { font-family: 'DM Sans', -apple-system, sans-serif; background: ${embedded
           </div>
           <div className="header-right">
             <div className="badge"><div className="badge-dot" /> En línea</div>
-            <button className="new-chat-btn" onClick={() => { setMessages([]); setStarted(false); }} title="Nueva conversación">+</button>
+            <button className="new-chat-btn" onClick={() => { setMessages([]); setStarted(false); savedChats.current[mode] = { messages: [], started: false }; }} title="Nueva conversación">+</button>
           </div>
         </div>
 
